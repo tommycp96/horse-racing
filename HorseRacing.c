@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-#define SIZE(x) (sizeof(x) / sizeof((x)[0]));
+#define USERNAME "eric"
+#define NPM "0987"
+#define SIZE(x) (sizeof(x) / sizeof((x)[0]))
+#define YELLOW "\033[1;33m"
 
 struct horse {
   char name[100];
@@ -10,30 +14,44 @@ struct horse {
   int id;
 };
 
-char username[20] = "eric";
-char npm[4] = "0987";
 struct horse horses[3];
 
-int login(char name[20], char userNpm[4]);
+int login(char name[], char userNpm[]);
 int generateHorseSpeed();
 int generateHorseId();
 
+void makeColor(char color[]) {
+  printf("%s", color);
+}
+
+void resetColor() {
+  printf("\033[0m");
+}
+
 void printHorses() {
-  for (int i = 0; i < 3; i++) {
-    strcpy(horses[i].name, "horse");
-    horses[i].speed = generateHorseSpeed();
-    horses[i].id = generateHorseId();
-    printf("horse name: %s\n", horses[i].name);
-    printf("horse speed: %d\n", horses[i].speed);
-    printf("horse id: %d\n", horses[i].id);
+  int len = (int) SIZE(horses);
+  if(len != 0) {
+    for (int i = 0; i < len; i++) {
+      makeColor(YELLOW);
+      printf("Horse data %d\n", i + 1);
+      resetColor();
+      printf("Horse name: %s\n", horses[i].name);
+      printf("Horse speed: %d(m/s)\n", horses[i].speed);
+      printf("Horse id: %d\n", horses[i].id);
+    }
   }
 }
 
 void inputHorses() {
   int len = (int) SIZE(horses);
-  printf("len: %d\n", len);
+  char horseName[100];
   for (int i = 0; i < len; i++) {
-    
+    printf("Input horse data %d:\n", i + 1);
+    printf("Horse name: ");
+    scanf("%s", horseName);
+    strcpy(horses[i].name, horseName);
+    horses[i].speed = generateHorseSpeed();
+    horses[i].id = generateHorseId();
   }
 }
 
@@ -45,17 +63,21 @@ void racingMenu() {
   printf("4. Back to main menu\n");
   printf("Enter your option: ");
   scanf("%d", &option);
-  while(option != 4) {
-    switch (option) {
-    case 1:
+  while(option <= 3) {
+    if(option == 1) {
       inputHorses();
       break;
-    case 2:
-      printHorses();
-      break;
-
-    default:
-      break;
+    } 
+    else if (option == 2) {
+      int isEmpty = strcmp(horses[0].name, "");
+      if (isEmpty == 0) {
+        printf("Horses data are empty, please input the data first.\n");
+        break;
+      }
+      else {
+        printHorses();
+        break;
+      }
     }
   }
 }
@@ -103,9 +125,9 @@ int main(void) {
   return 0;
 }
 
-int login(char name[20], char userNpm[4]) {
-  int isUsername = strcmp(name, username);
-  int isNpm = strcmp(userNpm, npm);
+int login(char name[], char userNpm[]) {
+  int isUsername = strcmp(name, USERNAME);
+  int isNpm = strcmp(userNpm, NPM);
   return (isUsername == 0 && isNpm == 0) ? 0 : 1;
 }
 
