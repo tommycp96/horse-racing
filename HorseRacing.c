@@ -6,9 +6,13 @@
 #include <stdbool.h>
 
 #define USERNAME "eric"
-#define NPM "0987"
+#define NPM "1082"
+#define CLASS "A"
 #define SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define YELLOW "\033[1;33m"
+#define RED "\033[1;31m"
+#define GREEN "\033[1;32m"
+#define CYAN "\033[1;36m"
 
 const int defaultRaceLength = 500 / 10;
 
@@ -17,21 +21,27 @@ struct horse
   char name[100];
   int speed;
   int id;
-  int position;
+  float position;
+  int winPercentage;
 };
 
 struct horse horses[3];
+int choosenHorse = -1;
 
 int login(char name[], char userNpm[]);
 int generateHorseSpeed();
 int generateHorseId();
+int generateHorseWinPercentage();
 void makeColor(char color[]);
 void resetColor();
 void printHorses();
 void inputHorses();
 void printRaceBoard(int horseNum);
 void raceStart();
+void betting();
+void resetHorsesPosition();
 void racingMenu();
+void printBonus();
 
 int main(void)
 {
@@ -43,7 +53,7 @@ int main(void)
   printf("2. Exit\n");
   printf("Your input: ");
   scanf("%d", &option);
-  while (option != 2)
+  while (option <= 2)
   {
     switch (option)
     {
@@ -57,19 +67,24 @@ int main(void)
       {
         if (isLogin == 0)
         {
+          makeColor(GREEN);
           printf("Login success!\n");
+          resetColor();
           racingMenu();
           break;
         }
         if (isLogin != 0)
         {
+          makeColor(RED);
           printf("Login failed!\n");
+          resetColor();
           break;
         }
       }
       break;
     case 2:
-      return 0;
+      printBonus();
+      exit(0);
       break;
     default:
       printf("1. Login\n");
@@ -99,6 +114,11 @@ int generateHorseId()
   return rand() % (500 + 1 - 1) + 1;
 }
 
+int generateHorseWinPercentage()
+{
+  return rand() % (100 + 1 - 20) + 20;
+}
+
 void makeColor(char color[])
 {
   printf("%s", color);
@@ -122,6 +142,13 @@ void printHorses()
       printf("Horse name: %s\n", horses[i].name);
       printf("Horse speed: %d(m/s)\n", horses[i].speed);
       printf("Horse id: %d\n", horses[i].id);
+      printf("Horse win percentage: %d%%\n", horses[i].winPercentage);
+    }
+    if (choosenHorse != -1)
+    {
+      makeColor(GREEN);
+      printf("You choose horse %d: %s\n", choosenHorse + 1, horses[choosenHorse].name);
+      resetColor();
     }
   }
 }
@@ -139,6 +166,7 @@ void inputHorses()
     horses[i].speed = generateHorseSpeed();
     horses[i].id = generateHorseId();
     horses[i].position = 0;
+    horses[i].winPercentage = generateHorseWinPercentage();
   }
 }
 
@@ -149,7 +177,9 @@ void printRaceBoard(int horseNum)
     int loc = horses[horseNum].position;
     if (i == loc)
     {
+      makeColor(CYAN);
       printf("%s", horses[horseNum].name);
+      resetColor();
     }
     else
     {
@@ -173,19 +203,60 @@ void raceStart()
     printHorses();
     for (int number = 0; number < 3; number++)
     {
-      horses[number].position += (horses[number].speed / 10);
+      horses[number].position += (float)horses[number].speed / 10;
       printRaceBoard(number);
-      if (horses[number].position >= (defaultRaceLength))
+      if (horses[number].position >= ((float)defaultRaceLength))
       {
         continueon = false;
-        if (horses[0].position < horses[number].position)
+        if (choosenHorse >= 0)
         {
-          horses[0].position = horses[number].position;
+          struct horse yourHorse;
+          strcpy(yourHorse.name, horses[choosenHorse].name);
+          struct horse winHorse;
+          strcpy(winHorse.name, horses[number].name);
+          int isYourHorseWin = strcmp(yourHorse.name, winHorse.name);
+          if (isYourHorseWin == 0)
+          {
+            makeColor(GREEN);
+            printf("Your horse %s is the winner\n", yourHorse.name);
+            resetColor();
+          }
+          else
+          {
+            makeColor(RED);
+            printf("Your horse %s is lose from %s\n", yourHorse.name, winHorse.name);
+            resetColor();
+          }
+        }
+        else
+        {
+          makeColor(GREEN);
           printf("Horse %s is the winner\n", horses[number].name);
+          resetColor();
         }
       }
     }
     sleep(1);
+  }
+}
+
+void betting()
+{
+  int n;
+  printHorses();
+  printf("Choose your horse: ");
+  scanf("%d", &n);
+  printf("n value: %d\n", n);
+  printf("choosen before: %d\n", choosenHorse);
+  choosenHorse = n - 1;
+  printf("choosen after: %d\n", choosenHorse);
+}
+
+void resetHorsesPosition()
+{
+  for (int i = 0; i < 3; i++)
+  {
+    horses[i].position = 0;
   }
 }
 
@@ -195,10 +266,11 @@ void racingMenu()
   printf("1. Input horses data\n");
   printf("2. Show horses data\n");
   printf("3. Racing simulation\n");
-  printf("4. Back to main menu\n");
+  printf("4. Bet the horse\n");
+  printf("5. Back to main menu\n");
   printf("Enter your option: ");
   scanf("%d", &option);
-  while (option <= 3)
+  while (option <= 4)
   {
     if (option == 1)
     {
@@ -210,7 +282,9 @@ void racingMenu()
       int isEmpty = strcmp(horses[0].name, "");
       if (isEmpty == 0)
       {
+        makeColor(RED);
         printf("Horses data are empty, please input the data first.\n");
+        resetColor();
         break;
       }
       else
@@ -224,14 +298,45 @@ void racingMenu()
       int isEmpty = strcmp(horses[0].name, "");
       if (isEmpty == 0)
       {
+        makeColor(RED);
         printf("Horses data are empty, please input the data first.\n");
+        resetColor();
         break;
       }
       else
       {
+        resetHorsesPosition();
+        raceStart();
+        break;
+      }
+    }
+    else if (option == 4)
+    {
+      int isEmpty = strcmp(horses[0].name, "");
+      if (isEmpty == 0)
+      {
+        makeColor(RED);
+        printf("Horses data are empty, please input the data first.\n");
+        resetColor();
+        break;
+      }
+      else
+      {
+        betting();
+        resetHorsesPosition();
         raceStart();
         break;
       }
     }
   }
+}
+
+void printBonus()
+{
+  makeColor(GREEN);
+  printf("Name: %s\n", USERNAME);
+  printf("NPM: 210711082\n");
+  printf("Class: %s\n", CLASS);
+  printf("Bonuses has been taken: 1, 2, 3, All of it!\n");
+  resetColor();
 }
