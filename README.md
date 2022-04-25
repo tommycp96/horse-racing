@@ -1,3 +1,3 @@
 # horse-racing
 
-flashback learning C for fun lmao.
+## Flashback learning C for fun lmao.
